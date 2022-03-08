@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nimdle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>Nimdle</h1>
+    <div id="grid">
+    </div>
+</body>
+<script>
+    // INIT
+    const hebrew_letters = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת', 'ן', 'ך', 'ף', 'ץ'];
+    let working_row = 0;
+    const size = [5, 6];
+
+    let valid_words = [];
+    let true_word;
+    fetch('/words')
+    .then((response) => response.json())
+    .then((data) => {
+        valid_words = data;
+        true_word = selectWord();
+        createGrid(size[0], size[1]);
+        document.getElementById(rowAndColToId(0, 0)).focus();
+        console.log("" + valid_words.length + " valid words!");
+    });
+    
+
+    function jumpToNextRow() {
+        let row = working_row + 1;
+        let col = 0;
+        let id = rowAndColToId(row, col);
+        document.getElementById(id).focus();
+    }
+
+    function goToNextSquare(id) {
+        if (true) {
+            let [row, col] = IdToRowAndCol(id);
+            col++;
+            if (col >= true_word.length && row < size[1] - 1) {
+                // we should move a row - but DONT
+                /*
+                col = 0;
+                row++;
+                */
+            }
+            else {
+                let idToFocus = rowAndColToId(row, col);
+                let srcElem = document.getElementById(id);
+                let dstElem = document.getElementById(idToFocus);
+                if (srcElem.value != '') {
+                    dstElem.focus();
+                }
+            }
+        }
+    }
+
+    function enterPress() {
+        if (working_row < size[1]) {
+            submitGuess(working_row);
+        }
+    }
+
+    function showAlert(msg) {
+        setTimeout(function(){
+            alert(msg);
+        }, 500);
+    }
+
+    function submitGuess(row) {
+        // get guess word
+        let word = '';
+        for (let i = 0; i < true_word.length; i++) {
+            word += document.getElementById(rowAndColToId(row, i)).value;
+        }
+        // check word is long enough
+        if (word.length == true_word.length)
+        {
+            // check word is valid
+            if (valid_words.includes(word)) {
+                // submit
+                let res = guess(word);
+                visualizeGuessResults(row, res);
+                jumpToNextRow();
+                // check if user won!
+                let won = true;
+                for (let i = 0; i < res.length; i++) {
+                    if (res[i] != 2) {
+                        // not green
+                        won = false;
+                    }
+                }
+
+                working_row++;
+
+                if (won) {
+                    showAlert('Nice! Only in ' + working_row + ' Tries!');
+                }
+            }
+            else
+            {
+                showAlert('Word is not valid...');
+            }
+        }
+    }
+
+    function IdToRowAndCol(id) { 
+        let row = parseInt(id.substring(5, id.indexOf(',')));
+        let col = Math.abs(parseInt(id.substring(id.indexOf(',') + 1)) - true_word.length + 1);
+        return [row, col];
+    }
+
+    function rowAndColToId(row, col) {
+        // we need to flip the col, becuare hebrew is rtl
+        return 'input' + row + ',' + (true_word.length - col - 1);
+    }
+
+    function visualizeGuessResults(row, results) {
+        for (let i = 0; i < true_word.length; i++) {
+            let inputBox = document.getElementById(rowAndColToId(row, i));
+            let bgColor = 'grey'; // grey
+            if (results[i] == 1) {
+                bgColor = 'orange'; // yello
+            }
+            else if (results[i] == 2) {
+                bgColor = 'green'; // green
+            }
+            inputBox.style.backgroundColor = bgColor;
+            // set readonly
+            inputBox.readOnly = true;
+        }
+    }
+
+    // string to an array of numbers (letterCodes)
+    function stringToLetterCodes(string) {
+        let res = [];
+        for (let i = 0; i < string.length; i++) {
+            let letterCode = hebrew_letters.indexOf(string.charAt(i));
+            res[i] = letterCode;
+        }
+
+        return res;
+    }
+
+    // takes a guess and returns results
+    function guess(word) {
+        let result = [];
+        const wordCodes = stringToLetterCodes(word);
+        const answerCodes = stringToLetterCodes(true_word);
+        for (let i = 0; i < true_word.length; i++) {
+            const letterCode = wordCodes[i];
+            //console.log(letterCode);
+            let type = 0; // the letter is not in the word
+            if (answerCodes.includes(letterCode))
+            {
+                type = 1; // the letter is in the word but not in that place
+                if (answerCodes[i] == letterCode) {
+                    type = 2; // the place and the letter are correct
+                }
+            }
+            result.push(type);
+        }
+
+        return result; // array that for each letter tells what its result is
+    }
+
+    // selects random word
+    function selectWord() {
+        let index = Math.floor(Math.random() * valid_words.length);
+        return valid_words[index];
+    }
+
+    // create the letters grid
+    function createGrid(cols, rows) {
+        for (let r = 0; r < rows; r++) {
+            let div = document.createElement('DIV');
+            for (let c = 0; c < cols; c++) {
+                // create input
+                let elem = document.createElement('INPUT');
+                elem.className = 'gridInput';
+                elem.setAttribute('maxlength', 1);
+                let id = 'input' + r + ',' + c; // input<row>,<col>
+                elem.id = id;
+                // add event listener - enter key press
+                elem.addEventListener("keypress", (event)=> {
+                    if (event.keyCode === 13) { // key code of the keybord key
+                        event.preventDefault();
+                        enterPress();
+                    }
+                    setTimeout(function() {
+                        goToNextSquare(id);
+                    }, 10);
+                    //goToNextSquare(id);
+                });
+                div.append(elem);
+            }
+            document.getElementById('grid').append(div);
+        }
+    }
+</script>
+<style>
+    body {
+        text-align: center;
+        font-family: 'Open Sans', sans-serif;
+    }
+    .gridInput {
+        width: 75px;
+        height: 75px;
+        text-align: center;
+        font-size: 70px;
+        margin: 5px;
+        outline: none;
+        transition-duration: 0.25s;
+        font-family: 'Open Sans', sans-serif;
+    }
+</style>
+</html>
