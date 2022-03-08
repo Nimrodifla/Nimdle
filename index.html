@@ -25,7 +25,7 @@
     fetch('/words')
     .then((response) => response.json())
     .then((data) => {
-        valid_words = data;
+        valid_words = data.words;
         true_word = selectWord();
         createGrid(size[0], size[1]);
         document.getElementById(rowAndColToId(0, 0)).focus();

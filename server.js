@@ -9,7 +9,7 @@ app.get('/words', (req, res)=>{
     while (word_list.includes("'"))
         word_list = word_list.replace("'", '"');
     word_list = JSON.parse(word_list);
-    res.send(word_list);
+    res.send({'count': word_list.length, 'words': word_list});
 })
 
 app.get('/', (req, res)=>{
