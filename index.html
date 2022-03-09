@@ -36,8 +36,10 @@
     function jumpToNextRow() {
         let row = working_row + 1;
         let col = 0;
-        let id = rowAndColToId(row, col);
-        document.getElementById(id).focus();
+        if (row < size[1] && col < size[0]) {
+            let id = rowAndColToId(row, col);
+            document.getElementById(id).focus();
+        }
     }
 
     function goToNextSquare(id) {
@@ -52,10 +54,16 @@
                 */
             }
             else {
-                let idToFocus = rowAndColToId(row, col);
                 let srcElem = document.getElementById(id);
-                let dstElem = document.getElementById(idToFocus);
+                let idToFocus;
                 if (srcElem.value != '') {
+                    idToFocus = rowAndColToId(row, col);
+                    //console.log(id, 'a!');
+                }
+
+                if (idToFocus != undefined)
+                {
+                    let dstElem = document.getElementById(idToFocus);
                     dstElem.focus();
                 }
             }
@@ -102,6 +110,9 @@
 
                 if (won) {
                     showAlert('Nice! Only in ' + working_row + ' Tries!');
+                }
+                else if (working_row == size[1]) { // out of tries
+                    showAlert('Too bad. The word was: ' + true_word);
                 }
             }
             else
@@ -177,6 +188,17 @@
         return valid_words[index];
     }
 
+    // enabling to backspace
+    function goBackSqure(id) {
+        let elem = document.getElementById(id);
+        if (elem.value == '') {
+            let [row, col] = IdToRowAndCol(id);
+            col -= 1;
+            let newId = rowAndColToId(row, col);
+            document.getElementById(newId).focus();
+        }
+    }
+
     // create the letters grid
     function createGrid(cols, rows) {
         for (let r = 0; r < rows; r++) {
@@ -189,15 +211,17 @@
                 let id = 'input' + r + ',' + c; // input<row>,<col>
                 elem.id = id;
                 // add event listener - enter key press
-                elem.addEventListener("keypress", (event)=> {
+                elem.addEventListener(/*"keypress"*/'keydown', (event)=> {
                     if (event.keyCode === 13) { // key code of the keybord key
                         event.preventDefault();
                         enterPress();
                     }
+                    if (event.keyCode === 8) {
+                        goBackSqure(id);
+                    }
                     setTimeout(function() {
                         goToNextSquare(id);
                     }, 10);
-                    //goToNextSquare(id);
                 });
                 div.append(elem);
             }
