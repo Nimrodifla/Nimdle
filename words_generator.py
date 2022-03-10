@@ -19,14 +19,14 @@ links = ["https://he.wikipedia.org/wiki/%D7%9B%D7%93%D7%95%D7%A8_%D7%94%D7%90%D7
          "https://www.adamtsair.co.il/%D7%A1%D7%99%D7%A4%D7%95%D7%A8%D7%99%D7%9D-%D7%9C%D7%99%D7%9C%D7%93%D7%99%D7%9D/",
          "https://www.adamtsair.co.il/%d7%9e%d6%b4%d7%99%d7%95%d6%b9%d7%9e%d6%b8%d7%a0%d7%95%d6%b9-%d7%a9%d7%81%d6%b6%d7%9c-%d7%97%d6%b2%d7%aa%d7%95%d6%bc%d7%9c-%d7%96%d6%b6%d7%91%d6%b6%d7%9c/",
          "https://www.adamtsair.co.il/%d7%90%d6%b7%d7%a8%d6%b0%d7%9e%d7%95%d6%b9%d7%9f-%d7%94%d6%b7%d7%98%d6%b7%d7%91%d6%bc%d6%b7%d7%a2%d6%b7%d7%aa/",
-         "https://he.wikipedia.org/wiki/%D7%99%D7%A9%D7%A8%D7%90%D7%9C"
+         "https://he.wikipedia.org/wiki/%D7%99%D7%A9%D7%A8%D7%90%D7%9C",
+         "https://www.ynet.co.il/news/article/syssnawwq#autoplay",
+         "https://www.ynet.co.il/news/article/ryqp12vwq#autoplay",
+         "https://www.ynet.co.il/news/article/hkalcuhlc#autoplay"
          ]
 
 huge_text = ""
-for i in range(len(links)):
-    link = links[i]
-    addToText(link)
-    print(str(i+1) + ' of ' + str(len(links)) + ' done')
+
 
 heb_letters = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת', 'ן', 'ך', 'ף', 'ץ']
 heb_letters.append(' ')
@@ -54,7 +54,14 @@ def getWords(text):
             words.append(w)
         c+=1
 
-getWords(huge_text)
+for i in range(len(links)):
+    link = links[i]
+    addToText(link)
+    getWords(huge_text)
+    huge_text = ''
+    print(str(i+1) + ' of ' + str(len(links)) + ' done')
+
+#getWords(huge_text)
 
 import codecs
 
