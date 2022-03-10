@@ -11,27 +11,78 @@
 </head>
 <body>
     <h1>Nimdle</h1>
-    <div id="grid">
-    </div>
+    <div id="grid"></div>
+    <br>
+    <div id="keyboard"></div>
 </body>
 <script>
+    const [WHITE, ORANGE, GREEN, GREY] = ['rgb(220, 220, 220)', 'rgb(255, 160, 122)', 'rgb(144, 238, 144)', 'grey'];
     // INIT
     const hebrew_letters = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת', 'ן', 'ך', 'ף', 'ץ'];
+    let letters_info = [];
+    // set all white
+    for (let i = 0; i < hebrew_letters.length; i++) {
+        letters_info[i] = -1;
+    }
     let working_row = 0;
     const size = [5, 6];
 
     let valid_words = [];
     let true_word;
+    // get word list from the server
     fetch('/words')
     .then((response) => response.json())
     .then((data) => {
         valid_words = data.words;
         true_word = selectWord();
         createGrid(size[0], size[1]);
+        generateKeyboard();
         document.getElementById(rowAndColToId(0, 0)).focus();
         console.log("" + valid_words.length + " valid words!");
     });
-    
+
+    function updateKeyboard(guess, guess_res) {
+        updateKeysInfo(guess_res, guess);
+        generateKeyboard();
+    }
+
+    function updateKeysInfo(guess_res, guess) {
+        for (let i = 0; i < hebrew_letters.length; i++) {
+            for (let j = 0; j < guess.length; j++) {
+                if (hebrew_letters[i] == guess[j]) {
+                    if (letters_info[i] < guess_res[j])
+                        letters_info[i] = guess_res[j];
+                }
+            }
+        }
+    }
+
+    function generateKeyboard() {
+        const keysCont = document.getElementById('keyboard');
+        keysCont.innerHTML = '';
+        for (let i = 0; i < letters_info.length; i++) {
+            let color;
+            let letter = hebrew_letters[i];
+            const info = letters_info[i];
+            if (info == -1) {
+                color = WHITE;
+            }
+            else if (info == 0) {
+                color = GREY;
+            }
+            else if (info == 1) {
+                color = ORANGE;
+            }
+            else {
+                color = GREEN;
+            }
+            let elem = document.createElement('SPAN');
+            elem.classList = 'keyLetter';
+            elem.innerHTML = letter;
+            elem.style.backgroundColor = color;
+            keysCont.append(elem);
+        }
+    }
 
     function jumpToNextRow() {
         let row = working_row + 1;
@@ -96,6 +147,7 @@
                 // submit
                 let res = guess(word);
                 visualizeGuessResults(row, res);
+                updateKeyboard(word, res);
                 jumpToNextRow();
                 // check if user won!
                 let won = true;
@@ -136,12 +188,12 @@
     function visualizeGuessResults(row, results) {
         for (let i = 0; i < true_word.length; i++) {
             let inputBox = document.getElementById(rowAndColToId(row, i));
-            let bgColor = 'grey'; // grey
+            let bgColor = GREY; // grey
             if (results[i] == 1) {
-                bgColor = 'orange'; // yello
+                bgColor = ORANGE; // orange
             }
             else if (results[i] == 2) {
-                bgColor = 'green'; // green
+                bgColor = GREEN; // green
             }
             inputBox.style.backgroundColor = bgColor;
             // set readonly
@@ -244,6 +296,18 @@
         outline: none;
         transition-duration: 0.25s;
         font-family: 'Open Sans', sans-serif;
+    }
+
+    .keyLetter {
+        padding: 10px;
+        font-size: large;
+        font-weight: bold;
+        /*
+        border-color: black;
+        border-style: solid;
+        border-width: 2px;
+        */
+        margin: 2px;
     }
 </style>
 </html>
